@@ -3,9 +3,8 @@ from typing import Any
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from tickethub.schemas import TicketCreate, TicketUpdate
-
 from tickethub.models import Ticket
+from tickethub.schemas import TicketCreate, TicketUpdate
 
 
 async def upsert_ticket(
@@ -96,6 +95,7 @@ async def search_tickets(
     total = total_result.scalar_one()
 
     return tickets, total
+
 
 async def create_ticket(
     session: AsyncSession,

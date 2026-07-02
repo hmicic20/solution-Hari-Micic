@@ -3,7 +3,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from tickethub.database import get_db_session
 from tickethub.models import Ticket
-
 from tickethub.repositories.tickets import (
     create_ticket,
     get_ticket_by_id,
@@ -20,7 +19,6 @@ from tickethub.schemas import (
     TicketStatus,
     TicketUpdate,
 )
-
 
 router = APIRouter(prefix="/tickets", tags=["tickets"])
 
@@ -105,6 +103,7 @@ async def get_ticket_detail(
 
     return TicketDetail.model_validate(ticket)
 
+
 @router.post("", response_model=TicketDetail, status_code=status.HTTP_201_CREATED)
 async def create_ticket_endpoint(
     ticket_data: TicketCreate,
@@ -117,6 +116,7 @@ async def create_ticket_endpoint(
     )
 
     return TicketDetail.model_validate(ticket)
+
 
 @router.patch("/{ticket_id}", response_model=TicketDetail)
 async def update_ticket_endpoint(
@@ -140,4 +140,3 @@ async def update_ticket_endpoint(
     )
 
     return TicketDetail.model_validate(updated_ticket)
-

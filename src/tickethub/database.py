@@ -1,11 +1,14 @@
 from collections.abc import AsyncGenerator
 
-from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import (
+    AsyncAttrs,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 from sqlalchemy.orm import DeclarativeBase
 
 from tickethub.config import settings
-
 
 engine = create_async_engine(
     settings.database_url,

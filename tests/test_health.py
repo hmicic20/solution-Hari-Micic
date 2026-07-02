@@ -2,7 +2,6 @@ from fastapi.testclient import TestClient
 
 from tickethub.main import app
 
-
 client = TestClient(app)
 
 

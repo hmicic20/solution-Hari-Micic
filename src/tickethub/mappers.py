@@ -26,10 +26,7 @@ def map_status(completed: bool) -> str:
 
 def build_users_by_id(users: list[dict[str, Any]]) -> dict[int, str]:
     # Pretvara listu korisnika u mapu user_id -> username
-    return {
-        user["id"]: user["username"]
-        for user in users
-    }
+    return {user["id"]: user["username"] for user in users}
 
 
 def map_todo_to_ticket_data(

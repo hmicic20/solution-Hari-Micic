@@ -7,7 +7,6 @@ from tickethub.database import get_db_session
 from tickethub.routers.stats import router as stats_router
 from tickethub.routers.tickets import router as tickets_router
 
-
 app = FastAPI(
     title="TicketHub",
     description="Middleware REST service for syncing and managing support tickets.",

@@ -5,7 +5,6 @@ from tickethub.database import get_db_session
 from tickethub.repositories.stats import get_ticket_stats
 from tickethub.schemas import TicketStatsResponse
 
-
 router = APIRouter(prefix="/stats", tags=["stats"])
 
 

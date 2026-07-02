@@ -157,6 +157,7 @@ async def test_get_ticket_detail_returns_404_for_missing_ticket(
     assert response.status_code == 404
     assert response.json()["detail"] == "Ticket nije pronađen."
 
+
 @pytest.mark.asyncio
 async def test_create_ticket(client: AsyncClient) -> None:
     response = await client.post(

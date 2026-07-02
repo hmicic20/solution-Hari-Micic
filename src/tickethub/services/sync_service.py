@@ -9,11 +9,9 @@ from tickethub.repositories.tickets import upsert_ticket
 
 
 class TicketSourceClient(Protocol):
-    async def get_todos(self) -> list[dict[str, Any]]:
-        ...
+    async def get_todos(self) -> list[dict[str, Any]]: ...
 
-    async def get_users(self) -> list[dict[str, Any]]:
-        ...
+    async def get_users(self) -> list[dict[str, Any]]: ...
 
 
 async def sync_tickets(
