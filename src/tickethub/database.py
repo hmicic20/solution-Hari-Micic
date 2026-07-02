@@ -1,0 +1,30 @@
+from collections.abc import AsyncGenerator
+
+from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import DeclarativeBase
+
+from tickethub.config import settings
+
+
+engine = create_async_engine(
+    settings.database_url,
+    echo=False,
+)
+
+
+AsyncSessionLocal = async_sessionmaker(
+    bind=engine,
+    class_=AsyncSession,
+    expire_on_commit=False,
+)
+
+
+class Base(AsyncAttrs, DeclarativeBase):
+    pass
+
+
+async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
+    # Otvara jednu DB sesiju za pojedini request
+    async with AsyncSessionLocal() as session:
+        yield session

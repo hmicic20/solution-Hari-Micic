@@ -1,12 +1,16 @@
 [project]
 name = "tickethub"
 version = "0.1.0"
-description = "TicketHub REST API zadatak"
+description = "TicketHub REST API entrance test solution"
 requires-python = ">=3.11,<3.12"
 dependencies = [
     "fastapi==0.111.0",
     "uvicorn[standard]",
-    "httpx",
+    "httpx==0.27.0",
+    "sqlalchemy==2.0.36",
+    "aiosqlite",
+    "alembic",
+    "pydantic-settings",
 ]
 
 [project.optional-dependencies]
