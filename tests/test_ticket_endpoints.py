@@ -156,3 +156,81 @@ async def test_get_ticket_detail_returns_404_for_missing_ticket(
 
     assert response.status_code == 404
     assert response.json()["detail"] == "Ticket nije pronađen."
+
+@pytest.mark.asyncio
+async def test_create_ticket(client: AsyncClient) -> None:
+    response = await client.post(
+        "/tickets",
+        json={
+            "title": "New support ticket",
+            "description": "Something needs to be fixed.",
+            "status": "open",
+            "priority": "medium",
+            "assignee": "marko",
+        },
+    )
+
+    assert response.status_code == 201
+
+    data = response.json()
+
+    assert data["id"] is not None
+    assert data["title"] == "New support ticket"
+    assert data["status"] == "open"
+    assert data["priority"] == "medium"
+    assert data["assignee"] == "marko"
+
+
+@pytest.mark.asyncio
+async def test_create_ticket_rejects_invalid_data(client: AsyncClient) -> None:
+    response = await client.post(
+        "/tickets",
+        json={
+            "title": "",
+            "status": "invalid",
+            "priority": "urgent",
+        },
+    )
+
+    assert response.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_update_ticket(
+    client: AsyncClient,
+    session_maker: async_sessionmaker,
+) -> None:
+    await seed_tickets(session_maker)
+
+    response = await client.patch(
+        "/tickets/1",
+        json={
+            "status": "closed",
+            "priority": "high",
+            "assignee": "petra",
+        },
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert data["id"] == 1
+    assert data["status"] == "closed"
+    assert data["priority"] == "high"
+    assert data["assignee"] == "petra"
+
+
+@pytest.mark.asyncio
+async def test_update_ticket_returns_404_for_missing_ticket(
+    client: AsyncClient,
+) -> None:
+    response = await client.patch(
+        "/tickets/999",
+        json={
+            "status": "closed",
+        },
+    )
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Ticket nije pronađen."

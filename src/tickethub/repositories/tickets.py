@@ -3,6 +3,8 @@ from typing import Any
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from tickethub.schemas import TicketCreate, TicketUpdate
+
 from tickethub.models import Ticket
 
 
@@ -94,3 +96,43 @@ async def search_tickets(
     total = total_result.scalar_one()
 
     return tickets, total
+
+async def create_ticket(
+    session: AsyncSession,
+    ticket_data: TicketCreate,
+) -> Ticket:
+    # Kreira novi ticket u lokalnoj bazi
+    ticket = Ticket(
+        title=ticket_data.title,
+        description=ticket_data.description,
+        status=ticket_data.status.value,
+        priority=ticket_data.priority.value,
+        assignee=ticket_data.assignee,
+        source_payload=None,
+    )
+
+    session.add(ticket)
+    await session.commit()
+    await session.refresh(ticket)
+
+    return ticket
+
+
+async def update_ticket(
+    session: AsyncSession,
+    ticket: Ticket,
+    ticket_data: TicketUpdate,
+) -> Ticket:
+    # Mijenja postojeći ticket u lokalnoj bazi
+    update_data = ticket_data.model_dump(exclude_unset=True)
+
+    for field, value in update_data.items():
+        if hasattr(value, "value"):
+            value = value.value
+
+        setattr(ticket, field, value)
+
+    await session.commit()
+    await session.refresh(ticket)
+
+    return ticket

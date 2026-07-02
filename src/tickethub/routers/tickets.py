@@ -3,17 +3,22 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from tickethub.database import get_db_session
 from tickethub.models import Ticket
+
 from tickethub.repositories.tickets import (
+    create_ticket,
     get_ticket_by_id,
     list_tickets,
     search_tickets,
+    update_ticket,
 )
 from tickethub.schemas import (
+    TicketCreate,
     TicketDetail,
     TicketListItem,
     TicketListResponse,
     TicketPriority,
     TicketStatus,
+    TicketUpdate,
 )
 
 
@@ -99,3 +104,40 @@ async def get_ticket_detail(
         )
 
     return TicketDetail.model_validate(ticket)
+
+@router.post("", response_model=TicketDetail, status_code=status.HTTP_201_CREATED)
+async def create_ticket_endpoint(
+    ticket_data: TicketCreate,
+    session: AsyncSession = Depends(get_db_session),
+) -> TicketDetail:
+    # Kreira novi ticket
+    ticket = await create_ticket(
+        session=session,
+        ticket_data=ticket_data,
+    )
+
+    return TicketDetail.model_validate(ticket)
+
+@router.patch("/{ticket_id}", response_model=TicketDetail)
+async def update_ticket_endpoint(
+    ticket_id: int,
+    ticket_data: TicketUpdate,
+    session: AsyncSession = Depends(get_db_session),
+) -> TicketDetail:
+    # Mijenja postojeći ticket
+    ticket = await get_ticket_by_id(session=session, ticket_id=ticket_id)
+
+    if ticket is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Ticket nije pronađen.",
+        )
+
+    updated_ticket = await update_ticket(
+        session=session,
+        ticket=ticket,
+        ticket_data=ticket_data,
+    )
+
+    return TicketDetail.model_validate(updated_ticket)
+
