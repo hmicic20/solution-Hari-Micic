@@ -74,3 +74,31 @@ class TicketStatsResponse(BaseModel):
     total: int
     by_status: dict[str, int]
     by_priority: dict[str, int]
+
+
+class AuthLoginRequest(BaseModel):
+    username: str = Field(min_length=1)
+    password: str = Field(min_length=1)
+    expires_in_mins: int | None = Field(default=30, ge=1, le=1440)
+
+
+class AuthTokenResponse(BaseModel):
+    id: int
+    username: str
+    email: str
+    firstName: str
+    lastName: str
+    gender: str
+    image: str
+    accessToken: str
+    refreshToken: str
+
+
+class AuthUserResponse(BaseModel):
+    id: int
+    username: str
+    email: str
+    firstName: str
+    lastName: str
+    gender: str
+    image: str

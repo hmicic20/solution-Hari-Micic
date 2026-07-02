@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from tickethub.database import get_db_session
 from tickethub.logging_config import configure_logging
+from tickethub.routers.auth import router as auth_router
 from tickethub.routers.stats import router as stats_router
 from tickethub.routers.tickets import router as tickets_router
 
@@ -23,6 +24,7 @@ app = FastAPI(
 
 app.include_router(tickets_router)
 app.include_router(stats_router)
+app.include_router(auth_router)
 
 
 @app.get("/health", tags=["health"])
