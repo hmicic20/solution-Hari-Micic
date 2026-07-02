@@ -59,8 +59,18 @@ Primjer `.env` konfiguracije:
 APP_ENV=dev
 APP_NAME=TicketHub
 DATABASE_URL=sqlite+aiosqlite:///./tickethub.db
+
 SYNC_ON_STARTUP=false
+
 REDIS_URL=redis://localhost:6379/0
+CACHE_ENABLED=false
+CACHE_TTL_SECONDS=60
+
+LOG_LEVEL=INFO
+RATE_LIMIT_DEFAULT=100/minute
+
+BACKGROUND_SYNC_ENABLED=false
+BACKGROUND_SYNC_INTERVAL_SECONDS=300
 ```
 
 Za lokalni rad koristi se SQLite.
@@ -72,6 +82,92 @@ DATABASE_URL=postgresql+asyncpg://tickethub:tickethub@postgres:5432/tickethub
 ```
 
 ## Endpointi
+
+## Dodatne funkcionalnosti
+
+### Autentifikacija
+
+Projekt podržava osnovni JWT login flow preko DummyJSON auth servisa.
+
+Endpointi:
+
+```text
+POST /auth/login
+GET /auth/me
+```
+
+Primjer login zahtjeva:
+
+```json
+{
+  "username": "emilys",
+  "password": "emilyspass",
+  "expires_in_mins": 30
+}
+```
+
+`POST /auth/login` vraća `accessToken` i `refreshToken`.
+
+Za `GET /auth/me` potrebno je poslati Bearer token kroz Swagger Authorize opciju ili kroz header:
+
+```text
+Authorization: Bearer <accessToken>
+```
+
+### Redis cache
+
+Projekt ima opcionalni Redis cache za read endpoint-e:
+
+```text
+GET /tickets
+GET /tickets/search
+GET /stats
+```
+
+Cache se briše kod:
+
+```text
+POST /tickets
+PATCH /tickets/{id}
+```
+
+Lokalno je cache isključen po defaultu, a u Docker okruženju se može uključiti varijablom:
+
+```env
+CACHE_ENABLED=true
+CACHE_TTL_SECONDS=60
+```
+
+### Rate limiting
+
+API koristi rate limiting preko SlowAPI paketa.
+
+Primjeri limita:
+
+```text
+/tickets endpointi: 60/minute
+/auth/login: 10/minute
+default: 100/minute
+```
+
+Konfiguracija:
+
+```env
+RATE_LIMIT_DEFAULT=100/minute
+```
+
+### Background sync
+
+Projekt podržava opcionalni background sync job koji periodično dohvaća podatke iz DummyJSON-a.
+
+Po defaultu je isključen:
+
+```env
+BACKGROUND_SYNC_ENABLED=false
+BACKGROUND_SYNC_INTERVAL_SECONDS=300
+```
+
+Background sync ne prepisuje postojeće lokalno izmijenjene tickete, kako ručne izmjene napravljene preko `PATCH /tickets/{id}` ne bi bile izgubljene.
 
 ### Health
 
