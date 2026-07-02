@@ -2,6 +2,8 @@ from fastapi import FastAPI
 
 from tickethub.routers.tickets import router as tickets_router
 
+from tickethub.routers.stats import router as stats_router
+
 
 app = FastAPI(
     title="TicketHub",
@@ -10,6 +12,7 @@ app = FastAPI(
 )
 
 app.include_router(tickets_router)
+app.include_router(stats_router)
 
 
 @app.get("/health", tags=["health"])

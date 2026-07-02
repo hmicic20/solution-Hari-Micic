@@ -67,3 +67,8 @@ class TicketListResponse(BaseModel):
     limit: int
     offset: int
     items: list[TicketListItem]
+
+class TicketStatsResponse(BaseModel):
+    total: int
+    by_status: dict[str, int]
+    by_priority: dict[str, int]
