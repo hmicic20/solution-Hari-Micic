@@ -12,6 +12,7 @@ dependencies = [
     "alembic",
     "pydantic-settings",
     "pydantic>=2.7,<2.8",
+    "asyncpg",
 ]
 
 [project.optional-dependencies]

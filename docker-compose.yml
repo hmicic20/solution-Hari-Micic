@@ -1,0 +1,47 @@
+services:
+  api:
+    build: .
+    container_name: tickethub-api
+    ports:
+      - "8000:8000"
+    environment:
+      APP_ENV: docker
+      APP_NAME: TicketHub
+      DATABASE_URL: postgresql+asyncpg://tickethub:tickethub@postgres:5432/tickethub
+      REDIS_URL: redis://redis:6379/0
+      SYNC_ON_STARTUP: "false"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    command: >
+      sh -c "python -m alembic upgrade head &&
+             python -m tickethub.commands.sync &&
+             uvicorn tickethub.main:app --app-dir src --host 0.0.0.0 --port 8000"
+
+  postgres:
+    image: postgres:16
+    container_name: tickethub-postgres
+    environment:
+      POSTGRES_DB: tickethub
+      POSTGRES_USER: tickethub
+      POSTGRES_PASSWORD: tickethub
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tickethub -d tickethub"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7
+    container_name: tickethub-redis
+    ports:
+      - "6379:6379"
+
+volumes:
+  postgres_data:
