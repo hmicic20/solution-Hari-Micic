@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from tickethub.cache import delete_cache_pattern, get_cache, set_cache
 from tickethub.database import get_db_session
 from tickethub.models import Ticket
 from tickethub.repositories.tickets import (
@@ -47,7 +48,20 @@ async def get_tickets(
     offset: int = Query(default=0, ge=0),
     session: AsyncSession = Depends(get_db_session),
 ) -> TicketListResponse:
-    # Vraća paginiranu listu ticketa iz lokalne baze
+    # Vraća paginiranu listu ticketa iz lokalne baze uz cache
+    cache_key = (
+        "tickets:list:"
+        f"status={status_filter.value if status_filter else ''}:"
+        f"priority={priority_filter.value if priority_filter else ''}:"
+        f"limit={limit}:"
+        f"offset={offset}"
+    )
+
+    cached_data = await get_cache(cache_key)
+
+    if cached_data is not None:
+        return TicketListResponse.model_validate(cached_data)
+
     tickets, total = await list_tickets(
         session=session,
         status=status_filter.value if status_filter else None,
@@ -56,12 +70,16 @@ async def get_tickets(
         offset=offset,
     )
 
-    return TicketListResponse(
+    response = TicketListResponse(
         total=total,
         limit=limit,
         offset=offset,
         items=[to_ticket_list_item(ticket) for ticket in tickets],
     )
+
+    await set_cache(cache_key, response.model_dump(mode="json"))
+
+    return response
 
 
 @router.get("/search", response_model=TicketListResponse)
@@ -71,7 +89,14 @@ async def search_tickets_endpoint(
     offset: int = Query(default=0, ge=0),
     session: AsyncSession = Depends(get_db_session),
 ) -> TicketListResponse:
-    # Pretražuje tickete po nazivu
+    # Pretražuje tickete po nazivu uz cache
+    cache_key = f"tickets:search:q={q}:limit={limit}:offset={offset}"
+
+    cached_data = await get_cache(cache_key)
+
+    if cached_data is not None:
+        return TicketListResponse.model_validate(cached_data)
+
     tickets, total = await search_tickets(
         session=session,
         q=q,
@@ -79,12 +104,16 @@ async def search_tickets_endpoint(
         offset=offset,
     )
 
-    return TicketListResponse(
+    response = TicketListResponse(
         total=total,
         limit=limit,
         offset=offset,
         items=[to_ticket_list_item(ticket) for ticket in tickets],
     )
+
+    await set_cache(cache_key, response.model_dump(mode="json"))
+
+    return response
 
 
 @router.get("/{ticket_id}", response_model=TicketDetail)
@@ -109,11 +138,14 @@ async def create_ticket_endpoint(
     ticket_data: TicketCreate,
     session: AsyncSession = Depends(get_db_session),
 ) -> TicketDetail:
-    # Kreira novi ticket
+    # Kreira novi ticket i briše zastarjeli cache
     ticket = await create_ticket(
         session=session,
         ticket_data=ticket_data,
     )
+
+    await delete_cache_pattern("tickets:*")
+    await delete_cache_pattern("stats:*")
 
     return TicketDetail.model_validate(ticket)
 
@@ -124,7 +156,7 @@ async def update_ticket_endpoint(
     ticket_data: TicketUpdate,
     session: AsyncSession = Depends(get_db_session),
 ) -> TicketDetail:
-    # Mijenja postojeći ticket
+    # Mijenja postojeći ticket i briše zastarjeli cache
     ticket = await get_ticket_by_id(session=session, ticket_id=ticket_id)
 
     if ticket is None:
@@ -138,5 +170,8 @@ async def update_ticket_endpoint(
         ticket=ticket,
         ticket_data=ticket_data,
     )
+
+    await delete_cache_pattern("tickets:*")
+    await delete_cache_pattern("stats:*")
 
     return TicketDetail.model_validate(updated_ticket)

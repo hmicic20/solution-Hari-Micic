@@ -13,6 +13,7 @@ dependencies = [
     "pydantic-settings",
     "pydantic>=2.7,<2.8",
     "asyncpg",
+    "redis",
 ]
 
 [project.optional-dependencies]
