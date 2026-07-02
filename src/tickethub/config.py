@@ -11,6 +11,8 @@ class Settings(BaseSettings):
     cache_enabled: bool = False
     cache_ttl_seconds: int = 60
     rate_limit_default: str = "100/minute"
+    background_sync_enabled: bool = False
+    background_sync_interval_seconds: int = 300
 
     model_config = SettingsConfigDict(
         env_file=".env",

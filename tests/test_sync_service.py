@@ -60,3 +60,45 @@ async def test_sync_tickets_saves_tickets_to_database() -> None:
     assert saved_ticket.status == "open"
     assert saved_ticket.priority == "low"
     assert saved_ticket.assignee == "ana"
+
+
+@pytest.mark.asyncio
+async def test_sync_tickets_does_not_overwrite_existing_ticket_by_default() -> None:
+    engine = create_async_engine("sqlite+aiosqlite:///:memory:")
+
+    async with engine.begin() as connection:
+        await connection.run_sync(Base.metadata.create_all)
+
+    session_maker = async_sessionmaker(
+        bind=engine,
+        expire_on_commit=False,
+    )
+
+    async with session_maker() as session:
+        session.add(
+            Ticket(
+                id=1,
+                title="Local edited title",
+                description="Local edited description",
+                status="closed",
+                priority="high",
+                assignee="petra",
+                source_payload={"id": 1},
+            )
+        )
+        await session.commit()
+
+        await sync_tickets(
+            session=session,
+            client=FakeDummyJSONClient(),
+        )
+
+        saved_ticket = await session.get(Ticket, 1)
+
+    await engine.dispose()
+
+    assert saved_ticket is not None
+    assert saved_ticket.title == "Local edited title"
+    assert saved_ticket.status == "closed"
+    assert saved_ticket.priority == "high"
+    assert saved_ticket.assignee == "petra"

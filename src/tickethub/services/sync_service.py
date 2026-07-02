@@ -20,6 +20,7 @@ class TicketSourceClient(Protocol):
 async def sync_tickets(
     session: AsyncSession,
     client: TicketSourceClient | None = None,
+    overwrite_existing: bool = False,
 ) -> int:
     # Dohvaća podatke iz DummyJSON-a i sprema ih u lokalnu bazu
     logger.info("Pokretanje sinkronizacije ticketa.")
@@ -35,7 +36,11 @@ async def sync_tickets(
 
     for todo in todos:
         ticket_data = map_todo_to_ticket_data(todo, users_by_id)
-        await upsert_ticket(session, ticket_data)
+        await upsert_ticket(
+            session=session,
+            ticket_data=ticket_data,
+            overwrite_existing=overwrite_existing,
+        )
 
     await session.commit()
 

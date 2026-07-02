@@ -10,13 +10,17 @@ from tickethub.schemas import TicketCreate, TicketUpdate
 async def upsert_ticket(
     session: AsyncSession,
     ticket_data: dict[str, Any],
+    overwrite_existing: bool = False,
 ) -> Ticket:
-    # Sprema novi ticket ili ažurira postojeći prema ID-u
+    # Sprema novi ticket ili po potrebi ažurira postojeći
     ticket = await session.get(Ticket, ticket_data["id"])
 
     if ticket is None:
         ticket = Ticket(**ticket_data)
         session.add(ticket)
+        return ticket
+
+    if not overwrite_existing:
         return ticket
 
     for field, value in ticket_data.items():
