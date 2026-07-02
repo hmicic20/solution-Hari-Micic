@@ -1,4 +1,4 @@
-.PHONY: install run test lint format migrate sync docker-build docker-up docker-down
+.PHONY: install run test lint format migrate sync docs docker-build docker-up docker-down
 
 install:
 	pip install -e ".[dev]"
@@ -20,6 +20,9 @@ migrate:
 
 sync:
 	python -m tickethub.commands.sync
+
+docs:
+	sphinx-build -b html docs docs/_build
 
 docker-build:
 	docker build -t tickethub-api .
