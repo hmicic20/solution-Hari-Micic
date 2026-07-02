@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from tickethub.cache import delete_cache_pattern, get_cache, set_cache
 from tickethub.database import get_db_session
 from tickethub.models import Ticket
+from tickethub.rate_limit import limiter
 from tickethub.repositories.tickets import (
     create_ticket,
     get_ticket_by_id,
@@ -41,7 +42,9 @@ def to_ticket_list_item(ticket: Ticket) -> TicketListItem:
 
 
 @router.get("", response_model=TicketListResponse)
+@limiter.limit("60/minute")
 async def get_tickets(
+    request: Request,
     status_filter: TicketStatus | None = Query(default=None, alias="status"),
     priority_filter: TicketPriority | None = Query(default=None, alias="priority"),
     limit: int = Query(default=20, ge=1, le=100),
@@ -83,7 +86,9 @@ async def get_tickets(
 
 
 @router.get("/search", response_model=TicketListResponse)
+@limiter.limit("60/minute")
 async def search_tickets_endpoint(
+    request: Request,
     q: str = Query(min_length=1),
     limit: int = Query(default=20, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
@@ -117,7 +122,9 @@ async def search_tickets_endpoint(
 
 
 @router.get("/{ticket_id}", response_model=TicketDetail)
+@limiter.limit("60/minute")
 async def get_ticket_detail(
+    request: Request,
     ticket_id: int,
     session: AsyncSession = Depends(get_db_session),
 ) -> TicketDetail:
@@ -134,7 +141,9 @@ async def get_ticket_detail(
 
 
 @router.post("", response_model=TicketDetail, status_code=status.HTTP_201_CREATED)
+@limiter.limit("60/minute")
 async def create_ticket_endpoint(
+    request: Request,
     ticket_data: TicketCreate,
     session: AsyncSession = Depends(get_db_session),
 ) -> TicketDetail:
@@ -151,7 +160,9 @@ async def create_ticket_endpoint(
 
 
 @router.patch("/{ticket_id}", response_model=TicketDetail)
+@limiter.limit("60/minute")
 async def update_ticket_endpoint(
+    request: Request,
     ticket_id: int,
     ticket_data: TicketUpdate,
     session: AsyncSession = Depends(get_db_session),

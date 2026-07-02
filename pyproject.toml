@@ -14,6 +14,7 @@ dependencies = [
     "pydantic>=2.7,<2.8",
     "asyncpg",
     "redis",
+    "slowapi",
 ]
 
 [project.optional-dependencies]

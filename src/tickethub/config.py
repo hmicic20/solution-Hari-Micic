@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     cache_enabled: bool = False
     cache_ttl_seconds: int = 60
+    rate_limit_default: str = "100/minute"
 
     model_config = SettingsConfigDict(
         env_file=".env",
