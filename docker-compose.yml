@@ -10,6 +10,7 @@ services:
       DATABASE_URL: postgresql+asyncpg://tickethub:tickethub@postgres:5432/tickethub
       REDIS_URL: redis://redis:6379/0
       SYNC_ON_STARTUP: "false"
+      LOG_LEVEL: INFO
     depends_on:
       postgres:
         condition: service_healthy

@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from typing import Any, Protocol
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -6,6 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from tickethub.clients.dummyjson import DummyJSONClient
 from tickethub.mappers import build_users_by_id, map_todo_to_ticket_data
 from tickethub.repositories.tickets import upsert_ticket
+
+logger = logging.getLogger(__name__)
 
 
 class TicketSourceClient(Protocol):
@@ -19,6 +22,8 @@ async def sync_tickets(
     client: TicketSourceClient | None = None,
 ) -> int:
     # Dohvaća podatke iz DummyJSON-a i sprema ih u lokalnu bazu
+    logger.info("Pokretanje sinkronizacije ticketa.")
+
     source_client = client or DummyJSONClient()
 
     todos, users = await asyncio.gather(
@@ -33,5 +38,7 @@ async def sync_tickets(
         await upsert_ticket(session, ticket_data)
 
     await session.commit()
+
+    logger.info("Sinkronizacija završena. Broj ticketa: %s", len(todos))
 
     return len(todos)

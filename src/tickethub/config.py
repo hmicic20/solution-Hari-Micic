@@ -6,6 +6,8 @@ class Settings(BaseSettings):
     app_env: str = "dev"
     database_url: str = "sqlite+aiosqlite:///./tickethub.db"
     sync_on_startup: bool = False
+    redis_url: str = "redis://localhost:6379/0"
+    log_level: str = "INFO"
 
     model_config = SettingsConfigDict(
         env_file=".env",
