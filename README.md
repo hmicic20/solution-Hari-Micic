@@ -1,3 +1,54 @@
+# TicketHub
+
+TicketHub je FastAPI REST servis za dohvat support ticketa iz DummyJSON servisa i spremanje u lokalnu bazu podataka.
+
+Aplikacija radi kao middleware servis: podaci se prvo sinkroniziraju iz vanjskog izvora, a zatim svi read i write endpointi rade nad lokalnom bazom.
+
+## Tehnologije
+
+- Python 3.11
+- FastAPI
+- Pydantic v2
+- SQLAlchemy 2 async
+- Alembic
+- SQLite lokalno
+- PostgreSQL u Docker Compose okruženju
+- httpx
+- pytest
+- Ruff
+- Redis
+- Docker
+- GitHub Actions
+
+## Struktura projekta
+
+```text
+tickethub/
+├── alembic/
+├── docs/
+├── src/
+│   └── tickethub/
+│       ├── clients/
+│       ├── commands/
+│       ├── repositories/
+│       ├── routers/
+│       ├── services/
+│       ├── cache.py
+│       ├── config.py
+│       ├── database.py
+│       ├── main.py
+│       ├── mappers.py
+│       ├── models.py
+│       └── schemas.py
+├── tests/
+├── .github/workflows/
+├── Dockerfile
+├── docker-compose.yml
+├── Makefile
+├── pyproject.toml
+└── README.md
+```
+
 ## Lokalno pokretanje
 
 ### 1. Kreiranje virtualnog okruženja
@@ -24,7 +75,7 @@ pip install -e ".[dev]"
 python -m alembic upgrade head
 ```
 
-### 4. Sinkronizacija podataka iz DummyJSON-a
+### 4. Sinkronizacija podataka
 
 ```bash
 python -m tickethub.commands.sync
@@ -40,15 +91,6 @@ Aplikacija je dostupna na:
 
 ```text
 http://127.0.0.1:8000
-```
-
-## API dokumentacija
-
-FastAPI automatski generira dokumentaciju:
-
-```text
-http://127.0.0.1:8000/docs
-http://127.0.0.1:8000/redoc
 ```
 
 ## Konfiguracija
@@ -73,23 +115,66 @@ BACKGROUND_SYNC_ENABLED=false
 BACKGROUND_SYNC_INTERVAL_SECONDS=300
 ```
 
-Za lokalni rad koristi se SQLite.
+Lokalno se koristi SQLite baza.
 
-Za Docker Compose koristi se PostgreSQL:
+U Docker Compose okruženju koristi se PostgreSQL:
 
 ```env
 DATABASE_URL=postgresql+asyncpg://tickethub:tickethub@postgres:5432/tickethub
 ```
 
+## API dokumentacija
+
+FastAPI dokumentacija dostupna je nakon pokretanja aplikacije:
+
+```text
+http://127.0.0.1:8000/docs
+http://127.0.0.1:8000/redoc
+```
+
+Statička OpenAPI/ReDoc dokumentacija može se generirati naredbom:
+
+```bash
+python -m tickethub.commands.export_openapi
+```
+
+Naredba generira:
+
+```text
+docs/openapi.json
+docs/redoc.html
+```
+
 ## Endpointi
 
-## Dodatne funkcionalnosti
+### Health
+
+```text
+GET /health
+```
+
+Provjerava radi li aplikacija i baza.
+
+### Ticketi
+
+```text
+GET /tickets
+GET /tickets/{id}
+GET /tickets?status=open&priority=high
+GET /tickets/search?q=test
+POST /tickets
+PATCH /tickets/{id}
+```
+
+### Statistika
+
+```text
+GET /stats
+```
+
+Vraća ukupan broj ticketa i grupiranje po statusu i prioritetu.
 
 ### Autentifikacija
-
-Projekt podržava osnovni JWT login flow preko DummyJSON auth servisa.
-
-Endpointi:
 
 ```text
 POST /auth/login
@@ -114,88 +199,6 @@ Za `GET /auth/me` potrebno je poslati Bearer token kroz Swagger Authorize opciju
 Authorization: Bearer <accessToken>
 ```
 
-### Redis cache
-
-Projekt ima opcionalni Redis cache za read endpoint-e:
-
-```text
-GET /tickets
-GET /tickets/search
-GET /stats
-```
-
-Cache se briše kod:
-
-```text
-POST /tickets
-PATCH /tickets/{id}
-```
-
-Lokalno je cache isključen po defaultu, a u Docker okruženju se može uključiti varijablom:
-
-```env
-CACHE_ENABLED=true
-CACHE_TTL_SECONDS=60
-```
-
-### Rate limiting
-
-API koristi rate limiting preko SlowAPI paketa.
-
-Primjeri limita:
-
-```text
-/tickets endpointi: 60/minute
-/auth/login: 10/minute
-default: 100/minute
-```
-
-Konfiguracija:
-
-```env
-RATE_LIMIT_DEFAULT=100/minute
-```
-
-### Background sync
-
-Projekt podržava opcionalni background sync job koji periodično dohvaća podatke iz DummyJSON-a.
-
-Po defaultu je isključen:
-
-```env
-BACKGROUND_SYNC_ENABLED=false
-BACKGROUND_SYNC_INTERVAL_SECONDS=300
-```
-
-Background sync ne prepisuje postojeće lokalno izmijenjene tickete, kako ručne izmjene napravljene preko `PATCH /tickets/{id}` ne bi bile izgubljene.
-
-### Health
-
-```text
-GET /health
-```
-
-Provjera radi li aplikacija i baza.
-
-### Ticketi
-
-```text
-GET /tickets
-GET /tickets/{id}
-GET /tickets?status=open&priority=high
-GET /tickets/search?q=test
-POST /tickets
-PATCH /tickets/{id}
-```
-
-### Statistika
-
-```text
-GET /stats
-```
-
-Vraća ukupan broj ticketa i grupiranje po statusu i prioritetu.
-
 ## Primjer kreiranja ticketa
 
 ```json
@@ -216,6 +219,78 @@ Vraća ukupan broj ticketa i grupiranje po statusu i prioritetu.
   "priority": "high"
 }
 ```
+
+## Vanjski izvor podataka
+
+Podaci se dohvaćaju iz DummyJSON servisa:
+
+```text
+https://dummyjson.com/todos
+https://dummyjson.com/users
+```
+
+Mapiranje podataka:
+
+```text
+todo -> title
+completed=true -> closed
+completed=false -> open
+id % 3 -> low / medium / high
+userId -> assignee username
+```
+
+Originalni JSON iz izvora sprema se u polje `source_payload`.
+
+## Dodatne funkcionalnosti
+
+### Redis cache
+
+Redis cache se koristi za read endpoint-e:
+
+```text
+GET /tickets
+GET /tickets/search
+GET /stats
+```
+
+Cache se briše kod:
+
+```text
+POST /tickets
+PATCH /tickets/{id}
+```
+
+Lokalno je cache isključen po defaultu, a može se uključiti kroz:
+
+```env
+CACHE_ENABLED=true
+CACHE_TTL_SECONDS=60
+```
+
+### Rate limiting
+
+API koristi rate limiting preko SlowAPI paketa.
+
+Primjeri limita:
+
+```text
+/tickets endpointi: 60/minute
+/auth/login: 10/minute
+default: 100/minute
+```
+
+### Background sync
+
+Projekt podržava opcionalni background sync job koji periodično dohvaća podatke iz DummyJSON-a.
+
+Po defaultu je isključen:
+
+```env
+BACKGROUND_SYNC_ENABLED=false
+BACKGROUND_SYNC_INTERVAL_SECONDS=300
+```
+
+Background sync ne prepisuje postojeće lokalno izmijenjene tickete, kako se ručne izmjene napravljene preko `PATCH /tickets/{id}` ne bi izgubile.
 
 ## Docker pokretanje
 
@@ -253,12 +328,13 @@ make lint
 make format
 make migrate
 make sync
+make docs
 make docker-build
 make docker-up
 make docker-down
 ```
 
-Na Windowsu se iste naredbe mogu pokrenuti i ručno ako `make` nije instaliran.
+Na Windowsu se iste naredbe mogu pokrenuti ručno ako `make` nije instaliran.
 
 ## Testiranje
 
@@ -288,27 +364,6 @@ Workflow se nalazi u:
 ```text
 .github/workflows/ci.yml
 ```
-
-## Vanjski izvor podataka
-
-Podaci se dohvaćaju iz DummyJSON servisa:
-
-```text
-https://dummyjson.com/todos
-https://dummyjson.com/users
-```
-
-Polja se mapiraju na lokalni Ticket model:
-
-```text
-todo -> title
-completed=true -> closed
-completed=false -> open
-id % 3 -> low / medium / high
-userId -> assignee username
-```
-
-Originalni JSON iz izvora sprema se u polje `source_payload`.
 
 ## Korištenje AI alata
 
