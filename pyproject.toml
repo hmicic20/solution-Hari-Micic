@@ -1,0 +1,19 @@
+[project]
+name = "tickethub"
+version = "0.1.0"
+description = "TicketHub REST API zadatak"
+requires-python = ">=3.11,<3.12"
+dependencies = [
+    "fastapi==0.111.0",
+    "uvicorn[standard]",
+    "httpx",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
