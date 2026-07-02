@@ -61,3 +61,9 @@ class TicketDetail(BaseModel):
 
     created_at: datetime
     updated_at: datetime
+
+class TicketListResponse(BaseModel):
+    total: int
+    limit: int
+    offset: int
+    items: list[TicketListItem]
