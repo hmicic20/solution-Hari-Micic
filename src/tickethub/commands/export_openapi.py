@@ -19,36 +19,22 @@ def main() -> None:
         encoding="utf-8",
     )
 
-    openapi_json = json.dumps(openapi_schema, ensure_ascii=False)
-    openapi_json = openapi_json.replace("</", "<\\/")
-
-    redoc_html = f"""<!DOCTYPE html>
+    redoc_html = """<!DOCTYPE html>
 <html lang="hr">
 <head>
   <meta charset="UTF-8">
   <title>TicketHub API dokumentacija</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body {{
+    body {
       margin: 0;
       padding: 0;
-    }}
+    }
   </style>
 </head>
 <body>
-  <redoc id="redoc-container"></redoc>
-
-  <script>
-    window.__OPENAPI_SPEC__ = {openapi_json};
-  </script>
-  <script src="https://cdn.jsdelivr.net/npm/redoc@next/bundles/redoc.standalone.js"></script>
-  <script>
-    Redoc.init(
-      window.__OPENAPI_SPEC__,
-      {{}},
-      document.getElementById("redoc-container")
-    );
-  </script>
+  <redoc spec-url="openapi.json"></redoc>
+  <script src="https://cdn.jsdelivr.net/npm/redoc@2/bundles/redoc.standalone.js"></script>
 </body>
 </html>
 """
