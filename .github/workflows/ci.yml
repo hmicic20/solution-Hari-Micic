@@ -37,6 +37,10 @@ jobs:
         run: |
           pytest
 
+      - name: Export OpenAPI documentation
+        run: |
+          python -m tickethub.commands.export_openapi
+
       - name: Alembic migracije
         run: |
           python -m alembic upgrade head

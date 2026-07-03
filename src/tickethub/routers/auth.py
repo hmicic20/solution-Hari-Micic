@@ -1,10 +1,11 @@
 from typing import Annotated
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from tickethub.clients.dummyjson_auth import DummyJSONAuthClient
+from tickethub.rate_limit import limiter
 from tickethub.schemas import AuthLoginRequest, AuthTokenResponse, AuthUserResponse
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -26,7 +27,9 @@ def get_bearer_token(
 
 
 @router.post("/login", response_model=AuthTokenResponse)
+@limiter.limit("10/minute")
 async def login(
+    request: Request,
     login_data: AuthLoginRequest,
 ) -> AuthTokenResponse:
     # Prijava korisnika preko DummyJSON servisa
@@ -49,7 +52,9 @@ async def login(
 
 
 @router.get("/me", response_model=AuthUserResponse)
+@limiter.limit("60/minute")
 async def get_me(
+    request: Request,
     access_token: Annotated[str, Depends(get_bearer_token)],
 ) -> AuthUserResponse:
     # Vraća podatke prijavljenog korisnika

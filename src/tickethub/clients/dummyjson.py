@@ -23,7 +23,7 @@ class DummyJSONClient:
             base_url=self.base_url,
             timeout=self.timeout,
         ) as client:
-            response = await client.get("/todos")
+            response = await client.get("/todos", params={"limit": 0})
             response.raise_for_status()
             data = response.json()
 
@@ -37,7 +37,7 @@ class DummyJSONClient:
             base_url=self.base_url,
             timeout=self.timeout,
         ) as client:
-            response = await client.get("/users")
+            response = await client.get("/users", params={"limit": 0})
             response.raise_for_status()
             data = response.json()
 

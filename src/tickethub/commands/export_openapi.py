@@ -42,7 +42,6 @@ def main() -> None:
     window.__OPENAPI_SPEC__ = {openapi_json};
   </script>
   <script src="https://cdn.jsdelivr.net/npm/redoc@next/bundles/redoc.standalone.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/redoc@next/bundles/redoc.standalone.js"></script>
   <script>
     Redoc.init(
       window.__OPENAPI_SPEC__,

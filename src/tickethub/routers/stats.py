@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from tickethub.cache import get_cache, set_cache
 from tickethub.database import get_db_session
+from tickethub.rate_limit import limiter
 from tickethub.repositories.stats import get_ticket_stats
 from tickethub.schemas import TicketStatsResponse
 
@@ -10,7 +11,9 @@ router = APIRouter(prefix="/stats", tags=["stats"])
 
 
 @router.get("", response_model=TicketStatsResponse)
+@limiter.limit("60/minute")
 async def get_stats(
+    request: Request,
     session: AsyncSession = Depends(get_db_session),
 ) -> TicketStatsResponse:
     # Vraća osnovne statistike ticketa

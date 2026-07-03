@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import JSON, DateTime, String, Text, func
+from sqlalchemy import JSON, CheckConstraint, DateTime, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from tickethub.database import Base
@@ -9,6 +9,17 @@ from tickethub.database import Base
 
 class Ticket(Base):
     __tablename__ = "tickets"
+
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('open', 'closed')",
+            name="ck_tickets_status",
+        ),
+        CheckConstraint(
+            "priority IN ('low', 'medium', 'high')",
+            name="ck_tickets_priority",
+        ),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     title: Mapped[str] = mapped_column(String(255), nullable=False)

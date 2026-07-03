@@ -22,7 +22,7 @@ sync:
 	python -m tickethub.commands.sync
 
 docs:
-	sphinx-build -b html docs docs/_build
+	python -m tickethub.commands.export_openapi
 
 docker-build:
 	docker build -t tickethub-api .
