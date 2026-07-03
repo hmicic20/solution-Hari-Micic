@@ -145,6 +145,18 @@ docs/openapi.json
 docs/redoc.html
 ```
 
+Statički ReDoc može se otvoriti direktno u browseru ili poslužiti lokalno:
+
+```bash
+python -m http.server 8080
+```
+
+Zatim otvoriti:
+
+```text
+http://127.0.0.1:8080/docs/redoc.html
+```
+
 ## Endpointi
 
 ### Health
@@ -229,6 +241,8 @@ https://dummyjson.com/todos
 https://dummyjson.com/users
 ```
 
+Kod sinkronizacije se eksplicitno dohvaćaju svi dostupni zapisi iz DummyJSON servisa, pa ukupan broj ticketa ovisi o trenutačnom broju podataka koje DummyJSON vraća.
+
 Mapiranje podataka:
 
 ```text
@@ -279,6 +293,28 @@ Primjeri limita:
 default: 100/minute
 ```
 
+Konfiguracija:
+
+```env
+RATE_LIMIT_DEFAULT=100/minute
+```
+
+### Logiranje
+
+Aplikacija koristi osnovno logiranje za važne događaje u sustavu:
+
+```text
+INFO - normalan rad aplikacije, sync i dohvat podataka
+WARNING - problemi s cacheom ili vanjskim servisima
+ERROR - greške kod health-checka ili neočekivane greške
+```
+
+Razina logiranja podešava se kroz varijablu:
+
+```env
+LOG_LEVEL=INFO
+```
+
 ### Background sync
 
 Projekt podržava opcionalni background sync job koji periodično dohvaća podatke iz DummyJSON-a.
@@ -291,6 +327,19 @@ BACKGROUND_SYNC_INTERVAL_SECONDS=300
 ```
 
 Background sync ne prepisuje postojeće lokalno izmijenjene tickete, kako se ručne izmjene napravljene preko `PATCH /tickets/{id}` ne bi izgubile.
+
+### Integritet baze
+
+Baza koristi Alembic migracije za verzioniranje sheme.
+
+Za `status` i `priority` dodani su DB constrainti kako bi baza prihvaćala samo dopuštene vrijednosti:
+
+```text
+status: open / closed
+priority: low / medium / high
+```
+
+Kod sinkronizacije s DummyJSON-om koriste se izvorni ID-jevi ticketa. Nakon synca u PostgreSQL okruženju aplikacija usklađuje ID sequence kako bi novi ticketi kreirani preko `POST /tickets` dobili ispravan sljedeći ID.
 
 ## Docker pokretanje
 
@@ -356,6 +405,7 @@ Projekt koristi GitHub Actions workflow koji pokreće:
 - instalaciju dependencies
 - Ruff lint
 - pytest testove
+- generiranje statičke OpenAPI/ReDoc dokumentacije
 - Alembic migracije
 - Docker build
 
@@ -376,3 +426,5 @@ Za izradu projekta korišten je ChatGPT kao pomoć pri:
 - pisanju README dokumentacije
 
 Kod je ručno pregledan, pokrenut i testiran lokalno.
+
+Projekt je lokalno testiran kroz pytest, Ruff, Alembic migracije, Docker Compose okruženje i ručnu provjeru endpointa kroz Swagger dokumentaciju.
