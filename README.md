@@ -211,6 +211,8 @@ Za `GET /auth/me` potrebno je poslati Bearer token kroz Swagger Authorize opciju
 Authorization: Bearer <accessToken>
 ```
 
+Napomena: autentifikacija u ovom projektu implementirana je kao demonstracijska integracija s DummyJSON auth servisom. Projekt nema vlastitu korisničku bazu ni vlastiti JWT issuer. Za produkcijski sustav bilo bi potrebno dodati lokalnu provjeru tokena i jasna autorizacijska pravila.
+
 ## Primjer kreiranja ticketa
 
 ```json
