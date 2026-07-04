@@ -37,7 +37,10 @@ class DummyJSONClient:
             base_url=self.base_url,
             timeout=self.timeout,
         ) as client:
-            response = await client.get("/users", params={"limit": 0})
+            response = await client.get(
+                "/users",
+                params={"limit": 0, "select": "id,username"},
+            )
             response.raise_for_status()
             data = response.json()
 
