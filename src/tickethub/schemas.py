@@ -1,8 +1,8 @@
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Annotated, Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 
 
 class TicketStatus(str, Enum):
@@ -16,12 +16,39 @@ class TicketPriority(str, Enum):
     high = "high"
 
 
+NonEmptyTitle = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=255),
+]
+
+OptionalDescription = (
+    Annotated[
+        str,
+        StringConstraints(strip_whitespace=True, max_length=2000),
+    ]
+    | None
+)
+
+OptionalAssignee = (
+    Annotated[
+        str,
+        StringConstraints(strip_whitespace=True, min_length=1, max_length=100),
+    ]
+    | None
+)
+
+NonEmptyString = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=1),
+]
+
+
 class TicketBase(BaseModel):
-    title: str = Field(min_length=1, max_length=255)
-    description: str | None = Field(default=None, max_length=2000)
+    title: NonEmptyTitle
+    description: OptionalDescription = None
     status: TicketStatus = TicketStatus.open
     priority: TicketPriority = TicketPriority.medium
-    assignee: str | None = Field(default=None, max_length=100)
+    assignee: OptionalAssignee = None
 
 
 class TicketCreate(TicketBase):
@@ -29,11 +56,11 @@ class TicketCreate(TicketBase):
 
 
 class TicketUpdate(BaseModel):
-    title: str | None = Field(default=None, min_length=1, max_length=255)
-    description: str | None = Field(default=None, max_length=2000)
+    title: NonEmptyTitle | None = None
+    description: OptionalDescription = None
     status: TicketStatus | None = None
     priority: TicketPriority | None = None
-    assignee: str | None = Field(default=None, max_length=100)
+    assignee: OptionalAssignee = None
 
 
 class TicketListItem(BaseModel):
@@ -77,8 +104,8 @@ class TicketStatsResponse(BaseModel):
 
 
 class AuthLoginRequest(BaseModel):
-    username: str = Field(min_length=1)
-    password: str = Field(min_length=1)
+    username: NonEmptyString
+    password: NonEmptyString
     expires_in_mins: int | None = Field(default=30, ge=1, le=1440)
 
 

@@ -89,7 +89,7 @@ async def get_tickets(
 @limiter.limit("60/minute")
 async def search_tickets_endpoint(
     request: Request,
-    q: str = Query(min_length=1),
+    q: str = Query(min_length=1, max_length=100, pattern=r".*\S.*"),
     limit: int = Query(default=20, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
     session: AsyncSession = Depends(get_db_session),
