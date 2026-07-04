@@ -44,7 +44,9 @@ def test_map_todo_to_ticket_data() -> None:
 
     result = map_todo_to_ticket_data(todo, users_by_id)
 
-    assert result["id"] == 1
+    assert "id" not in result
+    assert result["source_system"] == "dummyjson"
+    assert result["external_id"] == 1
     assert result["title"] == "Fix printer issue"
     assert result["description"] == "Fix printer issue"
     assert result["status"] == "open"

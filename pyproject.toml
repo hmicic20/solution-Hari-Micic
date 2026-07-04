@@ -5,23 +5,23 @@ description = "TicketHub REST API entrance test solution"
 requires-python = ">=3.11,<3.12"
 dependencies = [
     "fastapi==0.111.0",
-    "uvicorn[standard]",
+    "uvicorn[standard]==0.49.0",
     "httpx==0.27.0",
     "sqlalchemy==2.0.36",
-    "aiosqlite",
-    "alembic",
-    "pydantic-settings",
+    "aiosqlite==0.22.1",
+    "alembic==1.18.5",
+    "pydantic-settings==2.14.2",
     "pydantic>=2.7,<2.8",
-    "asyncpg",
-    "redis",
-    "slowapi",
+    "asyncpg==0.31.0",
+    "redis==8.0.1",
+    "slowapi==0.1.10",
 ]
 
 [project.optional-dependencies]
 dev = [
-    "pytest",
-    "pytest-asyncio",
-    "ruff",
+    "pytest==9.1.1",
+    "pytest-asyncio==1.4.0",
+    "ruff==0.15.20",
 ]
 
 [tool.pytest.ini_options]

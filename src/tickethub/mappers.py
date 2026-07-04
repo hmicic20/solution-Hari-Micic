@@ -38,7 +38,8 @@ def map_todo_to_ticket_data(
     user_id = todo.get("userId")
 
     return {
-        "id": todo["id"],
+        "source_system": "dummyjson",
+        "external_id": todo["id"],
         "title": todo_text,
         "description": todo_text,
         "status": map_status(todo["completed"]),

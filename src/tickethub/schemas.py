@@ -104,8 +104,8 @@ class TicketStatsResponse(BaseModel):
 
 
 class AuthLoginRequest(BaseModel):
-    username: NonEmptyString
-    password: NonEmptyString
+    username: str = Field(min_length=1)
+    password: str = Field(min_length=1)
     expires_in_mins: int | None = Field(default=30, ge=1, le=1440)
 
 

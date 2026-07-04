@@ -7,26 +7,49 @@ from tickethub.models import Ticket
 from tickethub.schemas import TicketCreate, TicketUpdate
 
 
+async def get_ticket_by_external_id(
+    session: AsyncSession,
+    source_system: str,
+    external_id: int,
+) -> Ticket | None:
+    # Traži seed ticket prema izvoru i vanjskom ID-u
+    result = await session.execute(
+        select(Ticket).where(
+            Ticket.source_system == source_system,
+            Ticket.external_id == external_id,
+        )
+    )
+    return result.scalar_one_or_none()
+
+
 async def upsert_ticket(
     session: AsyncSession,
     ticket_data: dict[str, Any],
     overwrite_existing: bool = False,
 ) -> Ticket:
-    # Sprema novi ticket ili po potrebi ažurira postojeći
-    ticket = await session.get(Ticket, ticket_data["id"])
+    # Sprema seed ticket bez miješanja lokalnog ID-a i vanjskog ID-a
+    source_system = ticket_data.get("source_system")
+    external_id = ticket_data.get("external_id")
 
-    if ticket is None:
+    existing_ticket: Ticket | None = None
+
+    if source_system is not None and external_id is not None:
+        existing_ticket = await get_ticket_by_external_id(
+            session=session,
+            source_system=source_system,
+            external_id=external_id,
+        )
+
+    if existing_ticket is None:
         ticket = Ticket(**ticket_data)
         session.add(ticket)
         return ticket
 
-    if not overwrite_existing:
-        return ticket
+    if overwrite_existing:
+        for field_name, field_value in ticket_data.items():
+            setattr(existing_ticket, field_name, field_value)
 
-    for field, value in ticket_data.items():
-        setattr(ticket, field, value)
-
-    return ticket
+    return existing_ticket
 
 
 async def get_ticket_by_id(
