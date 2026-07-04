@@ -163,6 +163,8 @@ http://127.0.0.1:8080/docs/redoc.html
 
 ```text
 GET /health
+GET /health/live
+GET /health/ready
 ```
 
 Provjerava radi li aplikacija i baza.

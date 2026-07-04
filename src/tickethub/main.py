@@ -63,22 +63,37 @@ app.include_router(stats_router)
 app.include_router(auth_router)
 
 
+async def check_database(session: AsyncSession) -> None:
+    # Provjerava je li baza dostupna
+    try:
+        await session.execute(text("SELECT 1"))
+    except SQLAlchemyError as exc:
+        logger.error("Health check baze nije uspio: %s", exc)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database unavailable",
+        ) from exc
+
+
+@app.get("/health/live", tags=["health"])
+async def health_live() -> dict[str, str]:
+    # Liveness provjera - aplikacija je pokrenuta
+    return {"status": "ok"}
+
+
+@app.get("/health/ready", tags=["health"])
+async def health_ready(
+    session: AsyncSession = Depends(get_db_session),
+) -> dict[str, str]:
+    # Readiness provjera - aplikacija i baza su spremne
+    await check_database(session)
+
+    return {"status": "ok", "database": "ok"}
+
+
 @app.get("/health", tags=["health"])
 async def health_check(
     session: AsyncSession = Depends(get_db_session),
 ) -> dict[str, str]:
-    # Provjera rade li API i baza
-    try:
-        await session.execute(text("SELECT 1"))
-    except SQLAlchemyError as exc:
-        logger.error("Provjera baze nije uspjela.", exc_info=True)
-
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Baza podataka nije dostupna.",
-        ) from exc
-
-    return {
-        "status": "ok",
-        "database": "ok",
-    }
+    # Zadržava stari /health endpoint radi kompatibilnosti
+    return await health_ready(session)
