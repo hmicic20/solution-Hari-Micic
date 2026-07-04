@@ -433,3 +433,5 @@ Za izradu projekta korišten je ChatGPT kao pomoć pri:
 Kod je ručno pregledan, pokrenut i testiran lokalno.
 
 Projekt je lokalno testiran kroz pytest, Ruff, Alembic migracije, Docker Compose okruženje i ručnu provjeru endpointa kroz Swagger dokumentaciju.
+
+Poveznica na ChatGPT prompt: https://chatgpt.com/share/6a4924ee-f7f8-83ed-abf7-4688e966c634
