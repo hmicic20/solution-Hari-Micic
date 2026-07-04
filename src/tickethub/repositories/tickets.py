@@ -128,7 +128,7 @@ async def create_ticket(
     session: AsyncSession,
     ticket_data: TicketCreate,
 ) -> Ticket:
-    # Kreira novi ticket u lokalnoj bazi
+    # Kreira novi ticket objekt, ali ne radi commit
     ticket = Ticket(
         title=ticket_data.title,
         description=ticket_data.description,
@@ -139,8 +139,6 @@ async def create_ticket(
     )
 
     session.add(ticket)
-    await session.commit()
-    await session.refresh(ticket)
 
     return ticket
 
@@ -150,7 +148,7 @@ async def update_ticket(
     ticket: Ticket,
     ticket_data: TicketUpdate,
 ) -> Ticket:
-    # Mijenja postojeći ticket u lokalnoj bazi
+    # Mijenja postojeći ticket objekt, ali ne radi commit
     update_data = ticket_data.model_dump(exclude_unset=True)
 
     for field, value in update_data.items():
@@ -158,8 +156,5 @@ async def update_ticket(
             value = value.value
 
         setattr(ticket, field, value)
-
-    await session.commit()
-    await session.refresh(ticket)
 
     return ticket

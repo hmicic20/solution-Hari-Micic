@@ -153,6 +153,9 @@ async def create_ticket_endpoint(
         ticket_data=ticket_data,
     )
 
+    await session.commit()
+    await session.refresh(ticket)
+
     await delete_cache_pattern("tickets:*")
     await delete_cache_pattern("stats:*")
 
@@ -181,6 +184,9 @@ async def update_ticket_endpoint(
         ticket=ticket,
         ticket_data=ticket_data,
     )
+
+    await session.commit()
+    await session.refresh(ticket)
 
     await delete_cache_pattern("tickets:*")
     await delete_cache_pattern("stats:*")
