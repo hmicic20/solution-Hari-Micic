@@ -1,5 +1,6 @@
 import logging
-from typing import Any
+from types import TracebackType
+from typing import Any, Self
 
 import httpx
 
@@ -14,34 +15,45 @@ class DummyJSONClient:
     ) -> None:
         self.base_url = base_url
         self.timeout = timeout
+        self._client = httpx.AsyncClient(
+            base_url=self.base_url,
+            timeout=self.timeout,
+        )
+
+    async def __aenter__(self) -> Self:
+        return self
+
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> None:
+        await self.aclose()
+
+    async def aclose(self) -> None:
+        # Zatvara HTTP konekcije klijenta
+        await self._client.aclose()
 
     async def get_todos(self) -> list[dict[str, Any]]:
         # Dohvaća tickete iz DummyJSON todo endpointa
         logger.info("Dohvat ticketa iz DummyJSON servisa.")
 
-        async with httpx.AsyncClient(
-            base_url=self.base_url,
-            timeout=self.timeout,
-        ) as client:
-            response = await client.get("/todos", params={"limit": 0})
-            response.raise_for_status()
-            data = response.json()
+        response = await self._client.get("/todos", params={"limit": 0})
+        response.raise_for_status()
+        data = response.json()
 
         return data["todos"]
 
     async def get_users(self) -> list[dict[str, Any]]:
-        # Dohvaća korisnike iz DummyJSON users endpointa
+        # Dohvaća samo potrebna korisnička polja iz DummyJSON servisa
         logger.info("Dohvat korisnika iz DummyJSON servisa.")
 
-        async with httpx.AsyncClient(
-            base_url=self.base_url,
-            timeout=self.timeout,
-        ) as client:
-            response = await client.get(
-                "/users",
-                params={"limit": 0, "select": "id,username"},
-            )
-            response.raise_for_status()
-            data = response.json()
+        response = await self._client.get(
+            "/users",
+            params={"limit": 0, "select": "id,username"},
+        )
+        response.raise_for_status()
+        data = response.json()
 
         return data["users"]

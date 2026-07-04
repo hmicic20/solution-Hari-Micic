@@ -26,23 +26,29 @@ async def sync_tickets(
     logger.info("Pokretanje sinkronizacije ticketa.")
 
     source_client = client or DummyJSONClient()
+    owns_client = client is None
 
-    todos, users = await asyncio.gather(
-        source_client.get_todos(),
-        source_client.get_users(),
-    )
-
-    users_by_id = build_users_by_id(users)
-
-    for todo in todos:
-        ticket_data = map_todo_to_ticket_data(todo, users_by_id)
-        await upsert_ticket(
-            session=session,
-            ticket_data=ticket_data,
-            overwrite_existing=overwrite_existing,
+    try:
+        todos, users = await asyncio.gather(
+            source_client.get_todos(),
+            source_client.get_users(),
         )
 
-    await session.commit()
+        users_by_id = build_users_by_id(users)
+
+        for todo in todos:
+            ticket_data = map_todo_to_ticket_data(todo, users_by_id)
+            await upsert_ticket(
+                session=session,
+                ticket_data=ticket_data,
+                overwrite_existing=overwrite_existing,
+            )
+
+        await session.commit()
+
+    finally:
+        if owns_client and hasattr(source_client, "aclose"):
+            await source_client.aclose()
 
     logger.info("Sinkronizacija završena. Broj ticketa: %s", len(todos))
 

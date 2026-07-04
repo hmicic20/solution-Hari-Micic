@@ -33,10 +33,9 @@ async def login(
     login_data: AuthLoginRequest,
 ) -> AuthTokenResponse:
     # Prijava korisnika preko DummyJSON servisa
-    client = DummyJSONAuthClient()
-
     try:
-        data = await client.login(login_data)
+        async with DummyJSONAuthClient() as client:
+            data = await client.login(login_data)
     except httpx.HTTPStatusError as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -58,10 +57,9 @@ async def get_me(
     access_token: Annotated[str, Depends(get_bearer_token)],
 ) -> AuthUserResponse:
     # Vraća podatke prijavljenog korisnika
-    client = DummyJSONAuthClient()
-
     try:
-        data = await client.get_current_user(access_token)
+        async with DummyJSONAuthClient() as client:
+            data = await client.get_current_user(access_token)
     except httpx.HTTPStatusError as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
