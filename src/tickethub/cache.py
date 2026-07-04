@@ -61,3 +61,11 @@ async def delete_cache_pattern(pattern: str) -> None:
             await redis_client.delete(key)
     except RedisError:
         logger.warning("Neuspješno brisanje cachea za uzorak: %s", pattern)
+
+
+async def close_cache() -> None:
+    # Zatvara Redis konekcije pri gašenju aplikacije
+    try:
+        await redis_client.aclose()
+    except RedisError:
+        logger.warning("Neuspješno zatvaranje Redis klijenta.")

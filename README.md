@@ -212,6 +212,7 @@ Za `GET /auth/me` potrebno je poslati Bearer token kroz Swagger Authorize opciju
 ```text
 Authorization: Bearer <accessToken>
 ```
+Write endpointi `POST /tickets` i `PATCH /tickets/{id}` zaštićeni su Bearer tokenom. Token se dobiva preko `POST /auth/login`, a zatim se šalje kroz Swagger Authorize opciju ili kroz `Authorization` header.
 
 Napomena: autentifikacija u ovom projektu implementirana je kao demonstracijska integracija s DummyJSON auth servisom. Projekt nema vlastitu korisničku bazu ni vlastiti JWT issuer. Za produkcijski sustav bilo bi potrebno dodati lokalnu provjeru tokena i jasna autorizacijska pravila.
 
@@ -330,7 +331,7 @@ BACKGROUND_SYNC_ENABLED=false
 BACKGROUND_SYNC_INTERVAL_SECONDS=300
 ```
 
-Background sync ne prepisuje postojeće lokalno izmijenjene tickete, kako se ručne izmjene napravljene preko `PATCH /tickets/{id}` ne bi izgubile.
+Background sync osvježava seed tickete iz DummyJSON-a. Ako je ticket lokalno izmijenjen preko `PATCH /tickets/{id}`, označava se s `locally_modified=true`, pa sync ne prepisuje njegova lokalno izmijenjena poslovna polja. U tom slučaju može se osvježiti samo `source_payload`.
 
 ### Integritet baze
 
@@ -343,7 +344,7 @@ status: open / closed
 priority: low / medium / high
 ```
 
-Kod sinkronizacije s DummyJSON-om koriste se izvorni ID-jevi ticketa. Nakon synca u PostgreSQL okruženju aplikacija usklađuje ID sequence kako bi novi ticketi kreirani preko `POST /tickets` dobili ispravan sljedeći ID.
+Kod sinkronizacije s DummyJSON-om koriste se izvorni ID-jevi ticketa. Seed ticketi koriste lokalni primarni ključ `id`, dok se izvorni DummyJSON ID sprema u polje `external_id`. Time se lokalni identitet ticketa odvaja od vanjskog identiteta izvora, pa dodatno usklađivanje PostgreSQL sequencea nije potrebno.
 
 ## Docker pokretanje
 
@@ -408,7 +409,7 @@ Projekt koristi GitHub Actions workflow koji pokreće:
 
 - instalaciju dependencies
 - Ruff lint
-- pytest testove
+- pytest testove s coverage pragom
 - generiranje statičke OpenAPI/ReDoc dokumentacije
 - Alembic migracije
 - Docker build

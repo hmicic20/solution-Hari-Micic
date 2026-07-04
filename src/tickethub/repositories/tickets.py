@@ -27,7 +27,7 @@ async def upsert_ticket(
     ticket_data: dict[str, Any],
     overwrite_existing: bool = False,
 ) -> Ticket:
-    # Sprema seed ticket bez miješanja lokalnog ID-a i vanjskog ID-a
+    # Sprema ili osvježava seed ticket bez prepisivanja lokalnih izmjena
     source_system = ticket_data.get("source_system")
     external_id = ticket_data.get("external_id")
 
@@ -45,9 +45,20 @@ async def upsert_ticket(
         session.add(ticket)
         return ticket
 
-    if overwrite_existing:
-        for field_name, field_value in ticket_data.items():
-            setattr(existing_ticket, field_name, field_value)
+    sync_fields = (
+        "title",
+        "description",
+        "status",
+        "priority",
+        "assignee",
+        "source_payload",
+    )
+
+    if overwrite_existing or not existing_ticket.locally_modified:
+        for field_name in sync_fields:
+            setattr(existing_ticket, field_name, ticket_data[field_name])
+    else:
+        existing_ticket.source_payload = ticket_data["source_payload"]
 
     return existing_ticket
 
@@ -128,14 +139,17 @@ async def create_ticket(
     session: AsyncSession,
     ticket_data: TicketCreate,
 ) -> Ticket:
-    # Kreira novi ticket objekt, ali ne radi commit
+    # Kreira novi lokalni ticket objekt, bez commita
     ticket = Ticket(
+        source_system="local",
+        external_id=None,
         title=ticket_data.title,
         description=ticket_data.description,
         status=ticket_data.status.value,
         priority=ticket_data.priority.value,
         assignee=ticket_data.assignee,
         source_payload=None,
+        locally_modified=True,
     )
 
     session.add(ticket)
@@ -148,7 +162,7 @@ async def update_ticket(
     ticket: Ticket,
     ticket_data: TicketUpdate,
 ) -> Ticket:
-    # Mijenja postojeći ticket objekt, ali ne radi commit
+    # Mijenja postojeći ticket objekt, bez commita
     update_data = ticket_data.model_dump(exclude_unset=True)
 
     for field, value in update_data.items():
@@ -156,5 +170,7 @@ async def update_ticket(
             value = value.value
 
         setattr(ticket, field, value)
+
+    ticket.locally_modified = True
 
     return ticket

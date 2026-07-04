@@ -33,9 +33,9 @@ jobs:
         run: |
           ruff check src tests
 
-      - name: Pytest
+      - name: Pytest with coverage
         run: |
-          pytest
+          pytest --cov=tickethub --cov-report=term-missing --cov-fail-under=70
 
       - name: Export OpenAPI documentation
         run: |

@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -12,7 +14,9 @@ from tickethub.repositories.tickets import (
     search_tickets,
     update_ticket,
 )
+from tickethub.routers.auth import get_current_user
 from tickethub.schemas import (
+    AuthUserResponse,
     TicketCreate,
     TicketDetail,
     TicketListItem,
@@ -144,6 +148,7 @@ async def get_ticket_detail(
 @limiter.limit("60/minute")
 async def create_ticket_endpoint(
     request: Request,
+    current_user: Annotated[AuthUserResponse, Depends(get_current_user)],
     ticket_data: TicketCreate,
     session: AsyncSession = Depends(get_db_session),
 ) -> TicketDetail:
@@ -168,6 +173,7 @@ async def update_ticket_endpoint(
     request: Request,
     ticket_id: int,
     ticket_data: TicketUpdate,
+    current_user: Annotated[AuthUserResponse, Depends(get_current_user)],
     session: AsyncSession = Depends(get_db_session),
 ) -> TicketDetail:
     # Mijenja postojeći ticket i briše zastarjeli cache

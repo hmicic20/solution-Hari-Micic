@@ -99,6 +99,11 @@
         ],
         "summary": "Create Ticket Endpoint",
         "operationId": "create_ticket_endpoint_tickets_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -248,6 +253,11 @@
         ],
         "summary": "Update Ticket Endpoint",
         "operationId": "update_ticket_endpoint_tickets__ticket_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "ticket_id",

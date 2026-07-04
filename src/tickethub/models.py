@@ -3,11 +3,13 @@ from typing import Any
 
 from sqlalchemy import (
     JSON,
+    Boolean,
     CheckConstraint,
     DateTime,
     String,
     Text,
     UniqueConstraint,
+    false,
     func,
 )
 from sqlalchemy.orm import Mapped, mapped_column
@@ -30,7 +32,7 @@ class Ticket(Base):
         index=True,
     )
 
-    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    title: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     status: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
     priority: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
@@ -38,6 +40,13 @@ class Ticket(Base):
 
     # Sprema puni JSON iz DummyJSON-a
     source_payload: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+
+    locally_modified: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False,
+        server_default=false(),
+    )
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

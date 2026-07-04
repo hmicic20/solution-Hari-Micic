@@ -10,8 +10,9 @@ from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from tickethub.cache import close_cache
 from tickethub.config import settings
-from tickethub.database import get_db_session
+from tickethub.database import engine, get_db_session
 from tickethub.logging_config import configure_logging
 from tickethub.rate_limit import limiter
 from tickethub.routers.auth import router as auth_router
@@ -46,6 +47,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
             with suppress(asyncio.CancelledError):
                 await background_task
+
+        await close_cache()
+        await engine.dispose()
 
 
 app = FastAPI(

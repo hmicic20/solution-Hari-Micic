@@ -26,6 +26,27 @@ def get_bearer_token(
     return credentials.credentials
 
 
+async def get_current_user(
+    access_token: Annotated[str, Depends(get_bearer_token)],
+) -> AuthUserResponse:
+    # Dohvaća trenutno prijavljenog korisnika preko Bearer tokena
+    try:
+        async with DummyJSONAuthClient() as client:
+            data = await client.get_current_user(access_token)
+    except httpx.HTTPStatusError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token nije valjan.",
+        ) from exc
+    except httpx.HTTPError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Auth servis trenutno nije dostupan.",
+        ) from exc
+
+    return AuthUserResponse.model_validate(data)
+
+
 @router.post("/login", response_model=AuthTokenResponse)
 @limiter.limit("10/minute")
 async def login(
@@ -54,21 +75,7 @@ async def login(
 @limiter.limit("60/minute")
 async def get_me(
     request: Request,
-    access_token: Annotated[str, Depends(get_bearer_token)],
+    current_user: Annotated[AuthUserResponse, Depends(get_current_user)],
 ) -> AuthUserResponse:
     # Vraća podatke prijavljenog korisnika
-    try:
-        async with DummyJSONAuthClient() as client:
-            data = await client.get_current_user(access_token)
-    except httpx.HTTPStatusError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token nije valjan.",
-        ) from exc
-    except httpx.HTTPError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Auth servis trenutno nije dostupan.",
-        ) from exc
-
-    return AuthUserResponse.model_validate(data)
+    return current_user

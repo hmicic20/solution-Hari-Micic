@@ -8,6 +8,20 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from tickethub.database import Base, get_db_session
 from tickethub.main import app
 from tickethub.models import Ticket
+from tickethub.routers.auth import get_current_user
+from tickethub.schemas import AuthUserResponse
+
+
+async def override_get_current_user() -> AuthUserResponse:
+    return AuthUserResponse(
+        id=1,
+        username="testuser",
+        email="test@example.com",
+        firstName="Test",
+        lastName="User",
+        gender="male",
+        image="https://example.com/test.png",
+    )
 
 
 @pytest_asyncio.fixture
@@ -36,6 +50,7 @@ async def client(
             yield session
 
     app.dependency_overrides[get_db_session] = override_get_db_session
+    app.dependency_overrides[get_current_user] = override_get_current_user
 
     transport = ASGITransport(app=app)
 
@@ -45,6 +60,7 @@ async def client(
     ) as async_client:
         yield async_client
 
+    app.dependency_overrides.clear()
     app.dependency_overrides.clear()
 
 
@@ -235,3 +251,21 @@ async def test_update_ticket_returns_404_for_missing_ticket(
 
     assert response.status_code == 404
     assert response.json()["detail"] == "Ticket nije pronađen."
+
+
+@pytest.mark.asyncio
+async def test_create_ticket_without_token_returns_401(
+    client: AsyncClient,
+) -> None:
+    app.dependency_overrides.pop(get_current_user, None)
+
+    response = await client.post(
+        "/tickets",
+        json={
+            "title": "Unauthorized ticket",
+            "status": "open",
+            "priority": "medium",
+        },
+    )
+
+    assert response.status_code == 401
